@@ -2,4 +2,9 @@ nltk==3.8.1
 streamlit==1.33.0
 scikit-learn==1.4.2
 numpy==1.26.1
-scipy== 1.12.0
+scipy==1.12.0
+matplotlib==3.8.0
+pandas==2.1.1
+wordcloud==1.8.2.2
+urlextract==1.0.0
+emoji==2.8.0
