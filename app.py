@@ -127,10 +127,10 @@ if uploaded_file is not None:
         with col1:
             st.dataframe(emoji_df)
 
-        with col2:
-            fig, ax = plt.subplots()
-            ax.pie(emoji_df[1].head(), labels= emoji_df[0].head(), autopct="%.2f")
-            st.pyplot(fig)
+        # with col2:
+        #     fig, ax = plt.subplots()
+        #     ax.pie(emoji_df[1].head(), labels= emoji_df[0].head(), autopct="%.2f")
+        #     st.pyplot(fig)
 
 
 
