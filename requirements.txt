@@ -1,7 +1,7 @@
-streamlit==1.33.0
-numpy==1.26.0         
-matplotlib==3.7.2      
-pandas==2.1.0
-wordcloud==1.8.2.2
-urlextract==1.0.0
-emoji==2.8.0
+streamlit==1.38.0
+numpy==2.1.0         
+matplotlib==3.9.2      
+pandas==2.2.2
+wordcloud==1.9.3
+urlextract==1.9.0
+emoji==2.12.1
