@@ -8,7 +8,7 @@ warnings.filterwarnings(action='ignore')
 st.sidebar.title("Whatspp Chat Analyzer") 
 
 # File uploader widget
-uploaded_file = st.sidebar.file_uploader("Choose a file",type=['text'])
+uploaded_file = st.sidebar.file_uploader("Choose a file")
 
 # Check if a file has been uploaded
 if uploaded_file is not None:
