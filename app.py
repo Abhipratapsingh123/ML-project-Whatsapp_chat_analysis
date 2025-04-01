@@ -1,5 +1,5 @@
 import streamlit as st
-import preprocessor
+import preprocessor_2
 import helper
 import matplotlib.pyplot as plt
 import warnings
@@ -8,13 +8,13 @@ warnings.filterwarnings(action='ignore')
 st.sidebar.title("Whatspp Chat Analyzer") 
 
 # File uploader widget
-uploaded_file = st.sidebar.file_uploader("Choose a file")
+uploaded_file = st.sidebar.file_uploader("Choose a file",type=['text'])
 
 # Check if a file has been uploaded
 if uploaded_file is not None:
     bytes_data = uploaded_file.getvalue()
     data = bytes_data.decode("utf-8")
-    df= preprocessor.preprocess(data)
+    df= preprocessor_2.preprocess(data)
 
     # st.dataframe(df)
 
