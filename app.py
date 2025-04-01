@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import warnings
 warnings.filterwarnings(action='ignore')
 
-st.sidebar.title("Whatspp Chat Analyzer")
+st.sidebar.title("Whatspp Chat Analyzer") 
 
 # File uploader widget
 uploaded_file = st.sidebar.file_uploader("Choose a file")
@@ -20,7 +20,8 @@ if uploaded_file is not None:
 
     # fetching unique users
     user_list = df['users'].unique().tolist()
-    user_list.remove('group_notification')
+    if 'group_notification' in user_list:
+      user_list.remove('group_notification')
     user_list.sort()
     user_list.insert(0,"Overall")
     selected_user = st.sidebar.selectbox("Show analysis wrt", user_list)
@@ -127,10 +128,10 @@ if uploaded_file is not None:
         with col1:
             st.dataframe(emoji_df)
 
-        # with col2:
-        #     fig, ax = plt.subplots()
-        #     ax.pie(emoji_df[1].head(), labels= emoji_df[0].head(), autopct="%.2f")
-        #     st.pyplot(fig)
+        with col2:
+            fig, ax = plt.subplots()
+            ax.pie(emoji_df[1].head(), labels= emoji_df[0].head(), autopct="%.2f")
+            st.pyplot(fig)
 
 
 
