@@ -10,7 +10,7 @@ def preprocess(data):
     # Convert extracted dates to datetime format
     df = pd.DataFrame({'user_message': messages, 'date': dates})
     df['date'] = df['date'].str.strip("[]")  # Remove square brackets
-    df['date'] = pd.to_datetime(df['date'], format='%d/%m/%y, %H:%M:%S')
+    df['date'] = pd.to_datetime(df['date'], format='%d/%m/%y, %H:%M:%S',errors='coerce')
 
     # Separate users and messages
     users = []
