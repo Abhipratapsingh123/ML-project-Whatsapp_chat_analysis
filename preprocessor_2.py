@@ -4,31 +4,29 @@ import pandas as pd
 def preprocess(data):
     # Adjusted pattern to match your chat format correctly
     pattern = r'\[\d{2}/\d{2}/\d{2,4},\s\d{2}:\d{2}:\d{2}\]\s'
-    
-    # Splitting messages and dates based on the pattern
-    messages = re.split(pattern, data)[1:]  # Skip the first empty part due to initial split
+    messages = re.split(pattern, data)[1:]
     dates = re.findall(pattern, data)
 
     # Convert extracted dates to datetime format
     df = pd.DataFrame({'user_message': messages, 'date': dates})
     df['date'] = df['date'].str.strip("[]")  # Remove square brackets
-    df['date'] = pd.to_datetime(df['date'], format='%d/%m/%y, %H:%M:%S')
+    df['date'] = pd.to_datetime(df['date'], format='%d/%m/%y, %H:%M:%S',errors='coerce')
 
     # Separate users and messages
     users = []
-    message_texts = []
+    messages = []
 
     for message in df['user_message']:
         entry = re.split(r'([\w\s\+]+?):\s', message, maxsplit=1)
         if len(entry) > 1:
             users.append(entry[1].strip())
-            message_texts.append(entry[2].strip() if len(entry) > 2 else '')  # Handle empty messages
+            messages.append(entry[2].strip())
         else:
             users.append('group_notification')
-            message_texts.append(entry[0].strip())
+            messages.append(entry[0].strip())
 
     df['users'] = users
-    df['messages'] = message_texts
+    df['messages'] = messages
     df.drop(columns=['user_message'], inplace=True)
 
     # Remove system messages like "Messages and calls are end-to-end encrypted."
