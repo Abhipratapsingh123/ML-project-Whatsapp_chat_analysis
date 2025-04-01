@@ -1,143 +1,126 @@
 from urlextract import URLExtract
+extractor = URLExtract()
 from wordcloud import WordCloud
 import pandas as pd
 import emoji
 from collections import Counter
 
-extractor = URLExtract()  # URL Extractor
-
-
-def fetch_stats(selected_user, df):
-    """Fetches statistics like message count, word count, media messages, and links shared."""
-    
-    if df.empty or 'messages' not in df.columns:
-        return 0, 0, 0, 0  # Return zeros if df is empty or missing columns
-
+def fetch_stats(selected_user,df):
     if selected_user != 'Overall':
         df = df[df['users'] == selected_user]
 
-    # Fetch number of messages
+    # fetch number of messages
     num_messages = df.shape[0]
+    # fetch number of words
+    words = []
+    for message in df['messages']:
+        words.extend(message.split())
+    # fetch number of media messages
 
-    # Fetch number of words
-    words = sum(len(str(message).split()) for message in df['messages'])
+    num_media_messages = df[df['messages'].str.contains('<Media omitted>\n', regex=False)].shape[0]
 
-    # Fetch number of media messages
-    num_media_messages = df[df['messages'].astype(str).str.contains('<Media omitted>', regex=False)].shape[0]
+    # fetching links
 
-    # Fetching links
-    links = [extractor.find_urls(str(message)) for message in df['messages']]
-    num_links = sum(len(link_list) for link_list in links)  # Count total links
-
-    return num_messages, words, num_media_messages, num_links
+    links =[]
+    for messages in df['messages']:
+        links.extend(extractor.find_urls(messages))
 
 
+
+    return num_messages, len(words),num_media_messages,len(links)
+
+
+
+# function to find the busiest user
 def most_busy_users(df):
-    """Finds the most active users in the chat."""
-    
-    if df.empty or 'users' not in df.columns:
-        return pd.Series(), pd.DataFrame()
-
     x = df['users'].value_counts().head()
-    percentage_df = (df['users'].value_counts(normalize=True) * 100).reset_index()
-    percentage_df.columns = ["name", "percent"]
-    return x, percentage_df
+    df = round((df['users'].value_counts() / df.shape[0]) * 100, 2).reset_index().rename(
+        columns={"users": "name", "count": "percent"})
+    return x,df
 
 
-def create_word_cloud(selected_user, df):
-    """Generates a WordCloud from chat messages."""
-    
-    if df.empty or 'messages' not in df.columns:
-        return WordCloud(width=500, height=500, min_font_size=10, background_color='white').generate("")
-
+def create_word_cloud(selected_user,df):
     if selected_user != 'Overall':
         df = df[df['users'] == selected_user]
-
-    text = ' '.join(df['messages'].astype(str))
     wc = WordCloud(width=500, height=500, min_font_size=10, background_color='white')
-    return wc.generate(text)
+    df_wc = wc.generate(df['messages'].str.cat(sep=' '))
+
+    return df_wc
+
 
 
 def most_common_words(selected_user, df):
-    """Finds the most commonly used words in chats, excluding stopwords."""
-    
-    if df.empty or 'messages' not in df.columns:
-        return pd.DataFrame(columns=["Word", "Count"])
-
     if selected_user != 'Overall':
         df = df[df['users'] == selected_user]
 
-    # Remove "<Media omitted>" messages
-    df = df[~df['messages'].str.contains(r'<media omitted>', case=False, regex=True)]
+    # Filter out group notifications and "<Media omitted>" messages
+    temp = df[df['users'] != 'group_notification']
+    temp['messages'] = temp['messages'].str.strip()  # Strip leading/trailing whitespace
 
-    # Load stopwords
-    try:
-        with open('stop_hinglish.txt', 'r', encoding='utf-8') as f:
-            stop_words = set(f.read().splitlines())
-    except FileNotFoundError:
-        stop_words = {"aap", "hai", "ko", "ka", "ki", "ke", "or", "par", "se", "yeh"}  # Default stopwords
+    # Remove all messages containing "<Media omitted>" (case insensitive)
+    temp = temp[~temp['messages'].str.contains(r'<media omitted>', case=False, regex=True)]
 
-    # Tokenize and filter words
-    words = []
-    for message in df['messages'].dropna():
-        words.extend([word.lower() for word in message.split() if word.lower() not in stop_words])
+    # Most used words in chats
+    with open('stop_hinglish.txt', 'r') as f:
+        stop_words = f.read().splitlines()  # Read stopwords as a list
 
-    # Get top 20 most common words
-    most_common_df = pd.DataFrame(Counter(words).most_common(20), columns=["Word", "Count"])
+    words_2 = []
+    for message in temp['messages']:
+        for word in message.lower().split():
+            if word not in stop_words:
+                words_2.append(word)
+
+    # Top 20 most used words
+
+    most_common_df = pd.DataFrame(Counter(words_2).most_common(20))
     return most_common_df
 
 
 def emoji_helper(selected_user, df):
-    """Extracts and counts emoji usage."""
-    
-    if df.empty or 'messages' not in df.columns:
-        return pd.DataFrame(columns=["Emoji", "Count"])
-
     if selected_user != 'Overall':
         df = df[df['users'] == selected_user]
 
-    emojis = [char for message in df['messages'].astype(str) for char in message if char in emoji.EMOJI_DATA]
-
-    if not emojis:  # If no emojis found, return empty DataFrame
-        return pd.DataFrame(columns=["Emoji", "Count"])
-
-    emoji_df = pd.DataFrame(Counter(emojis).most_common(), columns=["Emoji", "Count"])
+    emojis = []
+    for message in df['messages']:
+        emojis.extend([c for c in message if c in emoji.EMOJI_DATA])
+    emoji_df = pd.DataFrame(Counter(emojis).most_common(len(Counter(emojis))))
     return emoji_df
 
 
-def monthly_timeline(selected_user, df):
-    """Generates a monthly timeline of message activity."""
-    
-    if df.empty or 'messages' not in df.columns:
-        return pd.DataFrame(columns=["time", "messages"])
 
+# showing timeline
+
+def monthly_timeline(selected_user, df):
     if selected_user != 'Overall':
         df = df[df['users'] == selected_user]
 
-    timeline = df.groupby(['year', 'month_num', 'month'])['messages'].count().reset_index()
-    timeline['time'] = timeline['month'] + '-' + timeline['year'].astype(str)
+    timeline = df.groupby(['year','month_num','month']).count()['messages'].reset_index()
+
+    time =[]
+    for i in range(timeline.shape[0]):
+        time.append(timeline['month'][i]+'-'+ str(timeline['year'][i]))
+    timeline['time'] = time
     return timeline
 
 
+# weekly activity
 def week_activity(selected_user, df):
-    """Finds the number of messages sent per day of the week."""
-    
-    if df.empty or 'day_name' not in df.columns:
-        return pd.Series()
-
     if selected_user != 'Overall':
         df = df[df['users'] == selected_user]
+    return df['day_name'].value_counts()
 
-    return df['day_name'].value_counts().sort_index()
-
-
+# monthly activity
 def month_activity(selected_user, df):
-    """Finds the number of messages sent per month."""
-    
-    if df.empty or 'month' not in df.columns:
-        return pd.Series()
-
     if selected_user != 'Overall':
         df = df[df['users'] == selected_user]
+    return df['month'].value_counts()
 
-    return df['month'].value_counts().sort_index()
+
+
+
+
+
+
+
+
+
