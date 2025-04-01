@@ -3,7 +3,7 @@ extractor = URLExtract()
 from wordcloud import WordCloud
 import pandas as pd
 import emoji
-from collections import Counter
+from collections import Counter 
 
 def fetch_stats(selected_user,df):
     if selected_user != 'Overall':
@@ -16,7 +16,7 @@ def fetch_stats(selected_user,df):
     for message in df['messages']:
         words.extend(message.split())
     # fetch number of media messages
-
+    df['messages'] = df['messages'].astype(str)
     num_media_messages = df[df['messages'].str.contains('<Media omitted>\n', regex=False)].shape[0]
 
     # fetching links
