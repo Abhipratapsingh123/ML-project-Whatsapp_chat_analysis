@@ -29,7 +29,7 @@ def preprocess(data):
             users.append('group_notification')
             messages.append(entry[0])
             
-    df['user'] = users
+    df['users'] = users
     df['messages'] = messages
     df.drop(columns=['message'],inplace=True)
 
