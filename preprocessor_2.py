@@ -2,46 +2,44 @@ import re
 import pandas as pd
 
 def preprocess(data):
-    # Adjusted pattern to match your chat format correctly
-    pattern = r'\[\d{2}/\d{2}/\d{2,4},\s\d{2}:\d{2}:\d{2}\]\s'
-    messages = re.split(pattern, data)[1:]
-    dates = re.findall(pattern, data)
+    # replacing blank character with a space
+    data = data.replace('\u202f',' ')
 
-    # Convert extracted dates to datetime format
-    df = pd.DataFrame({'user_message': messages, 'date': dates})
-    df['date'] = df['date'].str.strip("[]")  # Remove square brackets
-    df['date'] = pd.to_datetime(df['date'], format='%d/%m/%y, %H:%M:%S')
+    # Extracting messages
+    pattern = r'\d{1,2}/\d{2}/\d{2},\s\d{1,2}:\d{2}\s[ap]m\s-\s'
+    messages = re.split(pattern,data)[1:]
+    
+    # extracting dates
+    pattern2 = r'\d{1,2}/\d{2}/\d{2},\s\d{1,2}:\d{2}\s[ap]m'
+    dates = re.findall(pattern2,data)
 
-    # Separate users and messages
-    users = []
-    messages = []
+    # converting to dataframe
+    df = pd.DataFrame({'message':messages,'dates':dates})
+    df['dates'] = pd.to_datetime(df['dates'],format='%d/%m/%y, %I:%M %p')
 
-    for message in df['user_message']:
-        entry = re.split(r'([\w\s\+]+?):\s', message, maxsplit=1)
-        if len(entry) > 1:
-            users.append(entry[1].strip())
-            messages.append(entry[2].strip())
+    # separating user-names and messages
+    users =[]
+    messages=[]
+    for message in df['message']:
+        entry= re.split(r'^(.*?):\s(.*)',message)
+        if entry[1:]:
+            users.append(entry[1])
+            messages.append(entry[2])
         else:
             users.append('group_notification')
-            messages.append(entry[0].strip())
-
-    df['users'] = users
+            messages.append(entry[0])
+            
+    df['user'] = users
     df['messages'] = messages
-    df.drop(columns=['user_message'], inplace=True)
+    df.drop(columns=['message'],inplace=True)
 
-    # Remove system messages like "Messages and calls are end-to-end encrypted."
-    df = df[~df['messages'].str.contains('Messages and calls are end-to-end encrypted', na=False)]
-    
-    # Identifying media messages
-    df['media_message'] = df['messages'].apply(lambda x: True if "<Media omitted>" in x else False)
-
-    # Extracting more date components
-    df['year'] = df['date'].dt.year
-    df['month_num'] = df['date'].dt.month
-    df['day_name'] = df['date'].dt.day_name()
-    df['month'] = df['date'].dt.month_name()
-    df['day'] = df['date'].dt.day
-    df['hour'] = df['date'].dt.hour
-    df['minute'] = df['date'].dt.minute
+    # extrating year, month, day, hour and minute from date
+    df['year'] = df['dates'].dt.year
+    df['month'] = df['dates'].dt.month_name()
+    df['month_num'] = df['dates'].dt.month
+    df['day_name'] = df['dates'].dt.day_name
+    df['day'] = df['dates'].dt.day
+    df['hour'] = df['dates'].dt.hour
+    df['minute'] = df['dates'].dt.minute
 
     return df
