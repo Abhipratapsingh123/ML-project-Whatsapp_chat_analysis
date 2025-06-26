@@ -6,5 +6,5 @@ This project is a WhatsApp Chat Analysis Application built using data analysis t
 
 #### Links
 
-- [Streamlit App](https://analyse-chats.streamlit.app/)
+- https://analyse-chats.streamlit.app/
 
