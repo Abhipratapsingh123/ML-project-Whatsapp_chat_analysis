@@ -14,7 +14,7 @@ uploaded_file = st.sidebar.file_uploader("Choose a file")
 if uploaded_file is not None:
     bytes_data = uploaded_file.getvalue()
     data = bytes_data.decode("utf-8")
-    df= preprocessor_2.preprocess(data)
+    df= preprocessor.preprocess(data)
 
     # st.dataframe(df)
 
