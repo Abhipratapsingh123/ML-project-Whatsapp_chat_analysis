@@ -1,5 +1,5 @@
 import streamlit as st
-import preprocessor_2
+import preprocessor
 import helper
 import matplotlib.pyplot as plt
 import warnings
