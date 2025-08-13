@@ -13,7 +13,7 @@ uploaded_file = st.sidebar.file_uploader("Choose a file")
 # Check if a file has been uploaded
 if uploaded_file is not None:
     bytes_data = uploaded_file.getvalue()
-    data = bytes_data.decode("utf-8")
+    data = bytes_data.decode("utf-8", errors="ignore")
     df= preprocessor_2.preprocess(data)
 
     # st.dataframe(df)
@@ -56,9 +56,13 @@ if uploaded_file is not None:
         st.title("Monthly Timeline")
         timeline = helper.monthly_timeline(selected_user,df)
         fig, ax = plt.subplots()
-        ax.plot(timeline['time'],timeline['messages'],color = 'green')
-        plt.xticks(rotation ='vertical')
-        st.pyplot(fig)
+        if not timeline.empty:
+            ax.plot(timeline['time'], timeline['messages'], color='green')
+            plt.xticks(rotation='vertical')
+            st.pyplot(fig)
+        else:
+            st.info("No timeline data available for this selection.")
+
 
         # activity map
         st.title("Activity Map")
@@ -120,18 +124,28 @@ if uploaded_file is not None:
         plt.xticks(rotation='vertical')
         st.pyplot(fig)
 
-        # emoji analysis
+       # emoji analysis
         emoji_df = helper.emoji_helper(selected_user, df)
         st.title("Emoji Analysis")
         col1, col2 = st.columns(2)
 
         with col1:
-            st.dataframe(emoji_df)
+            if not emoji_df.empty:
+                st.dataframe(emoji_df)
+            else:
+                st.info("No emojis found for this selection.")
 
-        with col2:
-            fig, ax = plt.subplots()
-            ax.pie(emoji_df[1].head(), labels= emoji_df[0].head(), autopct="%.2f")
-            st.pyplot(fig)
+            with col2:
+                if not emoji_df.empty:
+                 fig, ax = plt.subplots()
+                 ax.pie(
+                     emoji_df[1].head(),
+                    labels=emoji_df[0].head(),
+                    autopct="%.2f"
+                )
+        st.pyplot(fig)
+    else:
+        st.info("No emoji chart to display.")
 
 
 
