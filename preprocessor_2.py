@@ -42,6 +42,4 @@ def preprocess(data):
     df['hour'] = df['dates'].dt.hour
     df['minute'] = df['dates'].dt.minute
 
-    df = df.dropna(subset=['users']).reset_index(drop=True)
-
     return df
