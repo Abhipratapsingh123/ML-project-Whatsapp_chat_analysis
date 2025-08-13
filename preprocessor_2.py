@@ -21,7 +21,7 @@ def preprocess(data):
     users =[]
     messages=[]
     for message in df['message']:
-        entry= re.split(r'^(.*?):\s(.*)',message)
+        entry= re.split(r'^([^:]+):\s', message, maxsplit=1)
         if entry[1:]:
             users.append(entry[1])
             messages.append(entry[2])
