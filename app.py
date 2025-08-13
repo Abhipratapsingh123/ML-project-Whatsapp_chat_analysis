@@ -109,12 +109,16 @@ if uploaded_file is not None:
 
 
         # word cloud
+       
         st.title("Word Cloud")
         df_wc = helper.create_word_cloud(selected_user, df)
-        fig, ax = plt.subplots()
-        ax.imshow(df_wc)
-        ax.axis("off")
-        st.pyplot(fig)
+        if df_wc: 
+            fig, ax = plt.subplots()
+            ax.imshow(df_wc)
+            ax.axis("off")
+            st.pyplot(fig)
+        else:
+            st.write("No words available to generate a word cloud.")
 
         # most common words
         st.title("Most Used Words in Chats")
