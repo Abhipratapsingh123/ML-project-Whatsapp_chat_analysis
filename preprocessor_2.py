@@ -2,44 +2,50 @@ import re
 import pandas as pd
 
 def preprocess(data):
-    # replacing blank character with a space
-    data = data.replace('\u202f',' ')
+    # Replace non-breaking space with normal space
+    data = data.replace('\u202f', ' ')
 
-    # Extracting messages
+    # Pattern for 12-hour format WhatsApp export (example: 12/05/23, 9:15 pm - )
     pattern = r'\d{1,2}/\d{2}/\d{2},\s\d{1,2}:\d{2}\s[ap]m\s-\s'
-    messages = re.split(pattern,data)[1:]
+    messages = re.split(pattern, data)[1:]  # Skip the first split (empty)
     
-    # extracting dates
+    # Extract dates in 12-hour format
     pattern2 = r'\d{1,2}/\d{2}/\d{2},\s\d{1,2}:\d{2}\s[ap]m'
-    dates = re.findall(pattern2,data)
+    dates = re.findall(pattern2, data)
 
-    # converting to dataframe
-    df = pd.DataFrame({'message':messages,'dates':dates})
-    df['dates'] = pd.to_datetime(df['dates'],format='%d/%m/%y, %I:%M %p')
+    # Create DataFrame
+    df = pd.DataFrame({'message': messages, 'date': dates})
+    df['date'] = pd.to_datetime(df['date'], format='%d/%m/%y, %I:%M %p')
 
-    # separating user-names and messages
-    users =[]
-    messages=[]
+    # Separate usernames and messages
+    users = []
+    msgs = []
     for message in df['message']:
-        entry= re.split(r'^([^:]+):\s', message, maxsplit=1)
-        if entry[1:]:
+        # Split only on the first occurrence of ": "
+        entry = re.split(r'^([^:]+):\s', message, maxsplit=1)
+        if len(entry) >= 3:
             users.append(entry[1])
-            messages.append(entry[2])
+            msgs.append(entry[2])
         else:
             users.append('group_notification')
-            messages.append(entry[0])
-            
-    df['users'] = users
-    df['messages'] = messages
-    df.drop(columns=['message'],inplace=True)
+            msgs.append(entry[0])
 
-    # extrating year, month, day, hour and minute from date
-    df['year'] = df['dates'].dt.year
-    df['month'] = df['dates'].dt.month_name()
-    df['month_num'] = df['dates'].dt.month
-    df['day_name'] = df['dates'].dt.day_name
-    df['day'] = df['dates'].dt.day
-    df['hour'] = df['dates'].dt.hour
-    df['minute'] = df['dates'].dt.minute
+    df['users'] = users
+    df['messages'] = msgs
+
+    # Drop original combined column
+    df.drop(columns=['message'], inplace=True)
+
+    # Ensure messages are strings (prevents .str errors later)
+    df['messages'] = df['messages'].astype(str)
+
+    # Extract datetime components
+    df['year'] = df['date'].dt.year
+    df['month'] = df['date'].dt.month_name()
+    df['month_num'] = df['date'].dt.month
+    df['day_name'] = df['date'].dt.day_name()
+    df['day'] = df['date'].dt.day
+    df['hour'] = df['date'].dt.hour
+    df['minute'] = df['date'].dt.minute
 
     return df
